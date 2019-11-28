@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Amazon SageMaker notebook instance with Neptune access
+Parameters:
+  NotebookInstanceType:
+    Description: SageMaker instance type.
+    Type: String
+    Default: ml.t2.medium
+    AllowedValues:
+    - ml.t2.medium
+    - ml.t2.large
+    - ml.t2.xlarge
+    - ml.t2.2xlarge
+    - ml.m4.xlarge
+    - ml.m4.2xlarge
+    - ml.m4.4xlarge
+    - ml.m4.10xlarge
+    - ml.m4.16xlarge
+    ConstraintDescription: Must be a valid SageMaker instance type.
+  NeptuneClusterVpc:
+    Description: VPC Id of the VPC in which your Neptune cluster is running.
+    Type: AWS::EC2::VPC::Id
+  NeptuneClusterSubnetId:
+    Description: Id of one of the subnets in which your Neptune cluster is running.
+    Type: AWS::EC2::Subnet::Id
+  NeptuneClientSecurityGroup:
+    Description: 'A VPC security group with access to your Neptune cluster.'
+    Type: String
+Conditions:
+  AddNeptuneClientSecurityGroup:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: NeptuneClientSecurityGroup
+      - ''
+Resources:
+  SageMakerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Access. Only used if no Neptune client security group is provided.
+      VpcId:
+        Ref: NeptuneClusterVpc
+  NeptuneNotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties:
+      InstanceType:
+        Ref: NotebookInstanceType
+      SubnetId:
+        Ref: NeptuneClusterSubnetId
+      SecurityGroupIds:
+        Fn::If:
+        - AddNeptuneClientSecurityGroup
+        - - Ref: NeptuneClientSecurityGroup
+        - - Fn::GetAtt:
+            - SageMakerSecurityGroup
+            - GroupId
+      RoleArn:
+        Fn::GetAtt:
+        - JupyterNotebookExecutionRole
+        - Arn
+      LifecycleConfigName:
+        Fn::GetAtt:
+        - NeptuneNotebookInstanceLifecycleConfig
+        - NotebookInstanceLifecycleConfigName
+      DirectInternetAccess: Enabled
+      Tags:
+      - Key: Name
+        Value: Neptune-access
+      - Key: StackId
+        Value:
+          Fn::Sub: "${AWS::StackId}"
+      - Key: Stack
+        Value:
+          Fn::Sub: "${AWS::Region}-${AWS::StackName}"
+      - Key: Application
+        Value: NeptuneTutorial
+  NeptuneNotebookInstanceLifecycleConfig:
+    Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
+    Properties:
+      OnCreate:
+      - Content:
+          Fn::Base64:
+            Fn::Join:
+            - ''
+            - - "#!/bin/bash\n"
+              - "set -e\n"
+              - "mkdir /home/ec2-user/SageMaker/Neptune\n"
+              - "chmod a+rwx /home/ec2-user/SageMaker/Neptune\n"
+      OnStart:
+      - Content:
+          Fn::Base64:
+            Fn::Join:
+            - ''
+            - - "#!/bin/bash\n"
+              - "set -e\n"
+              - "#[ -e /home/ec2-user/neptune_ready ] && exit 0\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                msgpack\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                ipython-gremlin\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                gremlinpython\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                --upgrade tornado==4.5.1\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                ipython_unittest\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                jupyter_dojo\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                sparqlwrapper\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                ipython-sparql\n"
+              - "/home/ec2-user/anaconda3/bin/python3 -m  pip install --target /home/ec2-user/anaconda3/envs/python3/lib/python3.6/site-packages/
+                ipywidgets\n"
+              - sudo touch /home/ec2-user/neptune_ready
+  JupyterNotebookExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - sagemaker.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+        - "arn:aws:iam::aws:policy/NeptuneFullAccess"
+        - "arn:aws:iam::aws:policy/ComprehendFullAccess"
+        - "arn:aws:iam::aws:policy/TranslateFullAccess"
+      Policies:
+      - PolicyName: access
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: "s3:*"
+            Resource: "*"
+Outputs:
+  NeptuneNotebookInstanceId:
+    Value:
+      Ref: NeptuneNotebookInstance
+  NeptuneNotebook:
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Fn::Select:
+          - 1
+          - Fn::Split:
+            - "/"
+            - Ref: NeptuneNotebookInstance
+        - ".notebook."
+        - Ref: AWS::Region
+        - ".sagemaker.aws/"
+  NeptuneNotebookInstanceLifecycleConfigId:
+    Value:
+      Ref: NeptuneNotebookInstanceLifecycleConfig
