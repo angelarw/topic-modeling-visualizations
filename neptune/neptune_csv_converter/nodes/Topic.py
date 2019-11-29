@@ -11,3 +11,12 @@ class Topic(Node):
         self._terms[term.name] = term
         self._term_weight[term.name] = weight
         return term, weight
+
+
+    @property
+    def term_weight(self):
+        return self._term_weight
+
+    @property
+    def terms(self):
+        return self._terms
