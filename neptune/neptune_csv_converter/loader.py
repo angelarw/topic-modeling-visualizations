@@ -243,7 +243,7 @@ def cli(verbose, format, topictermscsv, doctopiccsv, vertexoutput, edgeoutput):
                     edge_writer.writerow({'~id': uuid.uuid4().hex,
                                           '~from': topic.id,
                                           '~to': term.id,
-                                          '~label': 'topic_weight',
+                                          '~label': 'topic_term_weight',
                                           'weight:Double': weight})
                     logger.debug(f"Wrote term edge: topic: '{topic}' - term: '{term}' - weight: {weight}")
 
