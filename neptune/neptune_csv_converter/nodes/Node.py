@@ -14,7 +14,6 @@ class Node:
         self.node_name = node_name
         self.node_uri = f"{self.RDF_URI_PREFIX}/{node_type}/doc/{self.ident.hex}"
         self.extra = None
-        self.documents = {}
 
     def __hash__(self):
         return self.ident
@@ -38,11 +37,3 @@ class Node:
     def type(self):
         return self.node_type
 
-    def in_doc(self, doc):
-        doc_name = doc.name
-        if doc_name not in self.docs:
-            self.docs[doc_name] = doc
-
-    @property
-    def docs(self):
-        return self.documents

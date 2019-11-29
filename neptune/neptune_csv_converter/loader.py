@@ -3,7 +3,7 @@ import json
 from json import JSONDecodeError
 
 import click
-from nodes.Document import Document, Topic
+from nodes.Document import Document, Topic, Term
 import uuid
 import logging
 
@@ -75,29 +75,57 @@ def get_or_add_topic(top_list, top_name):
     return top
 
 
+def get_or_add_terms(term_list, term_name):
+    if term_name in term_list:
+        term = term_list[term_name]
+    else:
+        term = Term(term_name)
+        term_list[term_name] = term
+    return term
+
+
 ###############################
 # Start of cli
 #
 @click.command()
 @click.option('--verbose', is_flag=True, default=False, help="Will print verbose messages.")
 @click.option('--format', type=click.Choice(['csv']), default='csv', help="Output format")
+@click.option('--topictermscsv', help='Input to topic terms csv file')
 @click.option('--doctopiccsv', help='Input doc to topics csv file')
 @click.option('--vertex', default='vertex.csv', help='Name of Vertex CSV file [default=vertex.csv]')
 @click.option('--edge', default='edge.csv', help='Name of Edge CSV file [default=edge.csv]')
-@click.option('--out', default='', help='Output graph file')
-def cli(verbose, format, doctopiccsv, vertex, edge, out):
+def cli(verbose, format, topictermscsv, doctopiccsv, output_vertex_file, output_edge_file):
     """
     Command-language processor using Python 'click' library.
     """
-    global ORG_COLOR, DOCUMENT_COLOR, PERSON_COLOR, LOCATION_COLOR, PHRASE_COLOR, ITEM_COLOR, TOPIC_COLOR, TAG_COLOR
-
     DOCS = {}
     TOPICS = {}
+    TERMS = {}
 
     if verbose:
         logger.setLevel(logging.DEBUG)
 
     logger.info(f"Loading doc to topics csv file: {doctopiccsv}")
+
+    with open(topictermscsv) as topic_csv:
+        csv_reader = csv.reader(topic_csv, delimiter=',')
+        ## exclude header row
+        headers = next(csv_reader, None)
+
+        for row in csv_reader:
+            topic_name = row[0]
+            term_name = row[1]
+            weight = float(row[2])
+
+            if topic_name in TOPICS:
+                current_topic = TOPICS[topic_name]
+            else:
+                current_topic = Topic(topic_name)
+                TOPICS[topic_name] = current_topic
+
+            term = get_or_add_terms(TERMS, term_name)
+            current_topic.have_weighted_term(term)
+            logger.debug(f"Term: '{term}' in topic: '{current_topic}'")
 
     with open(doctopiccsv) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -121,10 +149,9 @@ def cli(verbose, format, doctopiccsv, vertex, edge, out):
             top = get_or_add_topic(TOPICS, topic_name)
 
             current_doc.have_weighted_topic(top, weight)
-            top.in_doc(current_doc)
             logger.debug(f"Topic: '{top}' in document: '{current_doc}'")
-            if topic_name not in TOPICS:
-                TOPICS[topic_name] = top
+            # if topic_name not in TOPICS:
+            #     TOPICS[topic_name] = top
     #
     # At this point we've processed all the document records
     # Now, we loop through and write the vertex and edge files
@@ -132,9 +159,9 @@ def cli(verbose, format, doctopiccsv, vertex, edge, out):
     logger.info(f" Import Complete. Writing to '{format}' output format.")
 
     if format == 'csv':
-        logger.info(f"Writing Vertex file: {vertex}")
+        logger.info(f"Writing Vertex file: {output_vertex_file}")
 
-        with open(vertex, 'w', newline='') as vertex_file:
+        with open(output_vertex_file, 'w', newline='') as vertex_file:
             vertex_fieldnames = ['~id',
                                  '~label',
                                  'name:String']
@@ -167,10 +194,20 @@ def cli(verbose, format, doctopiccsv, vertex, edge, out):
                                         })
                 logger.debug(f"Wrote Top Node: '{topic}'")
 
-            logger.info(f"Done writing Vertex/Node file.")
-            logger.info(f"\nWriting Edge file: {edge}")
+            logger.info(f"Writing Term nodes")
 
-        with open(edge, 'w', newline='') as edge_file:
+            for term_name in TERMS:
+                term = TERMS[term_name]
+                vertex_writer.writerow({'~id': term.id,
+                                        '~label': term.type,
+                                        'name:String': term.name
+                                        })
+                logger.debug(f"Wrote Term Node: '{term}'")
+
+            logger.info(f"Done writing Vertex/Node file.")
+            logger.info(f"\nWriting Edge file: {output_edge_file}")
+
+        with open(output_edge_file, 'w', newline='') as edge_file:
             edge_fieldnames = ['~id',
                                '~from',
                                '~to',
@@ -180,10 +217,9 @@ def cli(verbose, format, doctopiccsv, vertex, edge, out):
             edge_writer.writeheader()
 
             for doc_name in DOCS:
-                # First we write all the Document to Organization edges
                 doc = DOCS[doc_name]
 
-                # Then all the Document to Topic edges
+                #  all the Document to Topic edges
                 #
                 topic_weight = doc.topic_weight
                 for topic_name in topic_weight:
@@ -195,6 +231,20 @@ def cli(verbose, format, doctopiccsv, vertex, edge, out):
                                           '~label': 'topic_weight',
                                           'weight:Double': weight})
                     logger.debug(f"Wrote TOP edge: doc: '{doc}' - top: '{topic}' - weight: {weight}")
+
+            for topic_name in TOPICS:
+                topic = TOPICS[topic_name]
+
+                term_weight = topic.term_weight
+                for term_name in term_weight:
+                    term = TERMS[term_name]
+                    weight = term_weight[term_name]
+                    edge_writer.writerow({'~id': uuid.uuid4().hex,
+                                          '~from': term.id,
+                                          '~to': weight.id,
+                                          '~label': 'topic_weight',
+                                          'weight:Double': weight})
+                    logger.debug(f"Wrote term edge: topic: '{topic}' - term: '{term}' - weight: {weight}")
 
 
 if __name__ == '__main__':
