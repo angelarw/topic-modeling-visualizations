@@ -95,7 +95,7 @@ def get_or_add_terms(term_list, term_name):
 @click.option('--doctopiccsv', help='Input doc to topics csv file')
 @click.option('--vertexoutput', default='vertex.csv', help='Name of Vertex CSV file [default=vertex.csv]')
 @click.option('--edgeoutput', default='edge.csv', help='Name of Edge CSV file [default=edge.csv]')
-def cli(verbose, format, topictermscsv, doctopiccsv, vertexoutput, output_edge_file):
+def cli(verbose, format, topictermscsv, doctopiccsv, vertexoutput, edgeoutput):
     """
     Command-language processor using Python 'click' library.
     """
@@ -206,9 +206,9 @@ def cli(verbose, format, topictermscsv, doctopiccsv, vertexoutput, output_edge_f
                 logger.debug(f"Wrote Term Node: '{term}'")
 
             logger.info(f"Done writing Vertex/Node file.")
-            logger.info(f"\nWriting Edge file: {output_edge_file}")
+            logger.info(f"\nWriting Edge file: {edgeoutput}")
 
-        with open(output_edge_file, 'w', newline='') as edge_file:
+        with open(edgeoutput, 'w', newline='') as edge_file:
             edge_fieldnames = ['~id',
                                '~from',
                                '~to',
