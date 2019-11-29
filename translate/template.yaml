@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Text processing.
+
+Globals:
+  Function:
+    Runtime: python3.7
+    Tracing: Active
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+
+Resources:
+
+  #######################
+  # Queues
+  #######################
+  TranslateQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      DelaySeconds: 0
+      VisibilityTimeout: 180
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt TranslateDLQ.Arn
+        maxReceiveCount: 3
+
+  TranslateDLQ:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      DelaySeconds: 0
+      VisibilityTimeout: 30
+
+  ReplayQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref TranslateQueue
+        - !Ref TranslateDLQ
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: ReplayQueuePolicy
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - s3.amazonaws.com
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !GetAtt TranslateQueue.Arn
+              - !GetAtt TranslateDLQ.Arn
+
+  #######################
+  # LAMBDAS
+  #######################
+  TranslateLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: src.main.lambda_handler
+      Timeout: 30
+      MemorySize: 256
+      Events:
+        Mapping:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt TranslateQueue.Arn
+            BatchSize: 1
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:*
+              - translate:*
+            Resource: "*"
+      ReservedConcurrentExecutions: 2
+
