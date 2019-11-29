@@ -3,7 +3,8 @@ import json
 from json import JSONDecodeError
 
 import click
-from nodes.Document import Document, Topic, Term
+from nodes.Document import Document, Topic
+from nodes.Term import Term
 import uuid
 import logging
 

@@ -1,7 +1,6 @@
 from .Node import Node
 from .Topic import Topic
 
-
 class Document(Node):
     def __init__(self, name):
         super().__init__('document', name)
