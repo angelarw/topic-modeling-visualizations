@@ -93,9 +93,9 @@ def get_or_add_terms(term_list, term_name):
 @click.option('--format', type=click.Choice(['csv']), default='csv', help="Output format")
 @click.option('--topictermscsv', help='Input to topic terms csv file')
 @click.option('--doctopiccsv', help='Input doc to topics csv file')
-@click.option('--vertex', default='vertex.csv', help='Name of Vertex CSV file [default=vertex.csv]')
-@click.option('--edge', default='edge.csv', help='Name of Edge CSV file [default=edge.csv]')
-def cli(verbose, format, topictermscsv, doctopiccsv, output_vertex_file, output_edge_file):
+@click.option('--vertexoutput', default='vertex.csv', help='Name of Vertex CSV file [default=vertex.csv]')
+@click.option('--edgeoutput', default='edge.csv', help='Name of Edge CSV file [default=edge.csv]')
+def cli(verbose, format, topictermscsv, doctopiccsv, vertexoutput, output_edge_file):
     """
     Command-language processor using Python 'click' library.
     """
@@ -125,7 +125,7 @@ def cli(verbose, format, topictermscsv, doctopiccsv, output_vertex_file, output_
                 TOPICS[topic_name] = current_topic
 
             term = get_or_add_terms(TERMS, term_name)
-            current_topic.have_weighted_term(term)
+            current_topic.have_weighted_term(term, weight)
             logger.debug(f"Term: '{term}' in topic: '{current_topic}'")
 
     with open(doctopiccsv) as csv_file:
@@ -160,9 +160,9 @@ def cli(verbose, format, topictermscsv, doctopiccsv, output_vertex_file, output_
     logger.info(f" Import Complete. Writing to '{format}' output format.")
 
     if format == 'csv':
-        logger.info(f"Writing Vertex file: {output_vertex_file}")
+        logger.info(f"Writing Vertex file: {vertexoutput}")
 
-        with open(output_vertex_file, 'w', newline='') as vertex_file:
+        with open(vertexoutput, 'w', newline='') as vertex_file:
             vertex_fieldnames = ['~id',
                                  '~label',
                                  'name:String']
