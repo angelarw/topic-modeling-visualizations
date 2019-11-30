@@ -8,9 +8,6 @@ import CONFIG from './topic-graph.config'
 import {Storage} from 'aws-amplify';
 import {DataService} from "../data-service/data.service";
 
-//const url = './assets/20-news-group-topic-terms.csv'
-
-const fileName = '2000-select_topic_terms.csv'
 
 @Component({
   selector: 'app-root',
@@ -39,25 +36,6 @@ export class TopicGraphComponent {
       this.links = this._links;
 
     })
-    // Storage.get(fileName).then((url: string) => {
-    //   console.log("url: " + url)
-    //   this.httpClient.get(url, {responseType: 'text'}).subscribe(data => {
-    //     papa.parse(data, {
-    //       header: true,
-    //       skipEmptyLines: true,
-    //       complete: results => {
-    //         const topicData = results.data;
-    //         const data: any = this.transformTopicsListToGraph(topicData);
-    //         console.log(data)
-    //         this._nodes = data['nodes'].map(n => new Node(n.id, n.name, n.group, n.type, n.weightSum));
-    //         this._links = data['links'].map(l => new Link(l.source, l.target, l.weight, (weight) => Math.max(Math.log(100 * weight), CONFIG.MIN_LINE_WIDTH)));
-    //         this.nodes = this._nodes;
-    //         this.links = this._links;
-    //       }
-    //     })
-    //   })
-    //
-    // })
   }
 
   onFilterUpdate(value: Filter) {
