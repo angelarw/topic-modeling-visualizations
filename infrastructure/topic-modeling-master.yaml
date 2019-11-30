@@ -117,3 +117,30 @@ Resources:
           - NeptuneStack
           - Outputs.NeptuneLoadFromS3IAMRoleArn
       TimeoutInMinutes: '60'
+
+  NeptuneAPIStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/neptune_api.packaged.yaml
+      Parameters:
+        NeptuneEndpoint:
+          Fn::GetAtt:
+          - NeptuneStack
+          - Outputs.DBClusterEndpoint
+        SecurityGroup:
+          Fn::GetAtt:
+              - VPCStack
+              - Outputs.NeptuneClientSG
+        Subnet1:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet1
+        Subnet2:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet2
+        QueryOutputBucket: !Ref S3Bucket
+        WebappUsername: !Ref WebappUsername
+        WebappPassword: !Ref WebappPassword
+      TimeoutInMinutes: '60'
