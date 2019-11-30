@@ -1,0 +1,21 @@
+.query-container {
+  display: flex;
+}
+
+.query-input {
+  flex: 1 1 auto;
+  margin-right: 8px;
+}
+
+.limit-input {
+  width: 50px;
+  flex: 0 0 auto;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.search-button {
+  height: 55px;
+  flex: 0 1 auto;
+  margin-left: 8px;
+}

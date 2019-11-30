@@ -1,0 +1,10 @@
+<nav mat-tab-nav-bar *ngIf="isLoggedIn">
+    <a mat-tab-link
+       *ngFor="let link of links"
+       [routerLink]="link.url"
+       routerLinkActive #rla="routerLinkActive"
+       [active]="rla.isActive"
+    >
+        {{link.text}}
+    </a>
+</nav>

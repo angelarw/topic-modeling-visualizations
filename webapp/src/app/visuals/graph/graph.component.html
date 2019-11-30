@@ -1,0 +1,17 @@
+<app-tooltip *ngIf="showTooltip" [visible]="tooltipVisibility"
+             [text]="tooltipText"
+             [x]="tooltipPosition.x"
+             [y]="tooltipPosition.y"></app-tooltip>
+<svg #svg [attr.viewBox]="[-_options.width/2, -_options.height/2, _options.width, _options.height]">
+  <g [zoomableOf]="svg">
+    <g [linkVisual]="link" *ngFor="let link of links"></g>
+    <g [nodeVisual]="node" *ngFor="let node of nodes"
+       (tooltipVisibilityChange)="onTooltipVisibilityChange($event)"
+       (tooltipTextChange)="onTooltipTextChange($event)"
+       (tooltipPositionChange)="onTooltipPositionChange($event)"
+       (tooltipNodeChange)="onTooltipNodeChange(node)"
+       [draggableNode]="node"
+       [draggableInGraph]="graph" [nodeDisplayType]="nodeDisplayType"></g>
+  </g>
+  <g [legendVisual]="nodes"></g>
+</svg>

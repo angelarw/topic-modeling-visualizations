@@ -1,0 +1,19 @@
+<svg:g
+  [attr.transform]="'translate(' + -300 + ',' + -300 + ')'"
+  class="legend"
+  xmlns:svg="">
+  <svg:g *ngFor="let item of scale; let i = index"
+         [attr.transform]="'translate(0, ' + 20.953125 * i + ')'">
+    <svg:rect [attr.height]="15"
+              [attr.width]="5"
+              [attr.fill]="item.color"></svg:rect>
+    <svg:text class="legend-label-background"
+              [attr.transform]="'translate(' + 15 + ',' + 12.5 + ')'">
+      {{item.text}}
+    </svg:text>
+    <svg:text class="legend-label"
+              [attr.transform]="'translate(' + 15 + ',' + 12.5 + ')'">
+      {{item.text}}
+    </svg:text>
+  </svg:g>
+</svg:g>

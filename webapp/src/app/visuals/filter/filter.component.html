@@ -1,0 +1,30 @@
+<div class="filter-container">
+
+  <div class="filter-input">
+    <mat-form-field class="w-100">
+      <mat-chip-list #chipList>
+        <mat-chip *ngFor="let filterTerm of filter.terms" [selectable]="selectable"
+                  [removable]="removable" (removed)="remove(filterTerm)">
+          {{filterTerm}}
+          <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+        </mat-chip>
+        <input placeholder="Filter..."
+               [matChipInputFor]="chipList"
+               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+               [matChipInputAddOnBlur]="addOnBlur"
+               (matChipInputTokenEnd)="add($event)">
+      </mat-chip-list>
+    </mat-form-field>
+  </div>
+
+  <div class="filter-depth-label">
+    <label>Depth: </label>
+  </div>
+  <mat-button-toggle-group #group="matButtonToggleGroup"
+                           class="filter-depth"
+                           [(ngModel)]="filter.depth"
+                           (change)="onUpdate(filter)">
+    <mat-button-toggle [value]=1>1</mat-button-toggle>
+    <mat-button-toggle [value]=2>2</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>

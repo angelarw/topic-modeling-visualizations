@@ -1,0 +1,23 @@
+<table mat-table [dataSource]="nodes" class="mat-elevation-z8 table">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef> Name</th>
+    <td mat-cell *matCellDef="let node">
+      <span *ngIf="node.type !== 'document'">{{node.name}}</span>
+      <a [routerLink]="" *ngIf="node.type === 'document'" (click)="openDialog(node.name)">{{node.name}}</a>
+
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="type">
+    <th mat-header-cell *matHeaderCellDef> Type</th>
+    <td mat-cell *matCellDef="let node"> {{node.type}} </td>
+  </ng-container>
+  <ng-container matColumnDef="score">
+    <th mat-header-cell *matHeaderCellDef> Score</th>
+    <td mat-cell *matCellDef="let node"> {{node.weightSum}} </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+  <tr mat-row *matRowDef="let node; columns: columnsToDisplay"
+      (mouseover)="node.selected=true"
+      (mouseout)="node.selected=false"
+      [class.selected]="node.selected"></tr>
+</table>
