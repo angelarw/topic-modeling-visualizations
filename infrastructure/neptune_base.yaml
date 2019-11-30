@@ -396,7 +396,3 @@ Outputs:
       Fn::GetAtt:
       - NeptuneLoadFromS3Role
       - Arn
-#  NeptuneIamAuthUser:
-#    Description: IAM User for accessing Neptune via IAM Auth
-#    Value:
-#      Ref: NeptuneIamAuthUser
