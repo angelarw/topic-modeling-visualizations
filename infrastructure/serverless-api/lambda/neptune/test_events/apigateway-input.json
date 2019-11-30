@@ -1,0 +1,53 @@
+{
+  "resource": "/docs",
+  "path": "/docs",
+  "httpMethod": "GET",
+  "headers": null,
+  "multiValueHeaders": null,
+  "queryStringParameters": {
+    "entities": "000",
+    "limit": "5",
+    "queryType": "TopDocumentsByEntities"
+  },
+  "multiValueQueryStringParameters": {
+    "entities": [
+      "000"
+    ]
+  },
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "h16byj",
+    "resourcePath": "/docs",
+    "httpMethod": "GET",
+    "extendedRequestId": "dZp6aHkKoAMF2CA=",
+    "requestTime": "25/Jul/2019:21:47:33 +0000",
+    "path": "/docs",
+    "accountId": "966785752331",
+    "protocol": "HTTP/1.1",
+    "stage": "test-invoke-stage",
+    "domainPrefix": "testPrefix",
+    "requestTimeEpoch": 1564091253865,
+    "requestId": "cf529fd3-af25-11e9-8d33-477210857df8",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "cognitoIdentityId": null,
+      "apiKey": "test-invoke-api-key",
+      "principalOrgId": null,
+      "cognitoAuthenticationType": null,
+      "userArn": "arn:aws:sts::012345678912:assumed-role/staff/angelaw",
+      "apiKeyId": "test-invoke-api-key-id",
+      "userAgent": "aws-internal/3 aws-sdk-java/1.11.563 Linux/4.9.137-0.1.ac.218.74.329.metal1.x86_64 OpenJDK_64-Bit_Server_VM/25.212-b03 java/1.8.0_212 vendor/Oracle_Corporation",
+      "accountId": "966785752331",
+      "caller": "AROA6CGHL3UFVHXZFHSW7:angelaw",
+      "sourceIp": "test-invoke-source-ip",
+      "accessKey": "ASIA6CGHL3UF42IFRZPF",
+      "cognitoAuthenticationProvider": null,
+      "user": "AROA6CGHL3UFVHXZFHSW7:angelaw"
+    },
+    "domainName": "testPrefix.testDomainName",
+    "apiId": "0ki9yt5wr9"
+  },
+  "body": null,
+  "isBase64Encoded": false
+}
