@@ -1,11 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Create Amazon Neptune cluster and Amazon SageMaker notebook
+Description: Create a VPC, an Amazon Neptune cluster, an Amazon SageMaker notebook, and a serverless API that queries the Neptune cluster.
 Parameters:
   NestedStackS3Location:
     Description: 'S3 locations of nested stacks.'
     Type: String
-  S3Bucket:
-    Description: 'S3 bucket.'
+    Default: 'large-text-understanding/cloudformation'
+  DataBucket:
+    Description: 'S3 bucket you just created.'
     Type: String
   DbInstanceType:
     Description: Neptune DB instance type
@@ -26,6 +27,7 @@ Parameters:
   WebappUsername:
     Description: the username for logging into the webapp
     Type: String
+    Default: 'user'
   WebappPassword:
     Description: the password for logging into the webapp
     Type: String
@@ -48,13 +50,13 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
-        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/vpc.yaml
+        Fn::Sub: https://s3.${AWS::Region}.amazonaws.com/${NestedStackS3Location}/vpc.yaml
       TimeoutInMinutes: '60'
   SageMakerNeptuneStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
-        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/sagemaker.yaml
+        Fn::Sub: https://s3.${AWS::Region}.amazonaws.com/${NestedStackS3Location}/sagemaker.yaml
       Parameters:
         NeptuneClusterVpc:
           Fn::GetAtt:
@@ -73,7 +75,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
-        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/neptune_base.yaml
+        Fn::Sub: https://s3.${AWS::Region}.amazonaws.com/${NestedStackS3Location}/neptune_base.yaml
       Parameters:
         NeptuneQueryTimeout: '300000'
         DbInstanceType:
@@ -106,7 +108,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
-        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/add_iam_role.json
+        Fn::Sub: https://s3.${AWS::Region}.amazonaws.com/${NestedStackS3Location}/add_iam_role.json
       Parameters:
         DBClusterId:
           Fn::GetAtt:
@@ -122,7 +124,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
-        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/neptune_api.packaged.yaml
+        Fn::Sub: https://s3.${AWS::Region}.amazonaws.com/${NestedStackS3Location}/serverless-api/neptune_api.packaged.yaml
       Parameters:
         NeptuneEndpoint:
           Fn::GetAtt:
@@ -140,7 +142,34 @@ Resources:
           Fn::GetAtt:
             - VPCStack
             - Outputs.PublicSubnet2
-        QueryOutputBucket: !Ref S3Bucket
+        QueryOutputBucket: !Ref DataBucket
         WebappUsername: !Ref WebappUsername
         WebappPassword: !Ref WebappPassword
       TimeoutInMinutes: '60'
+
+Outputs:
+  NeptuneEndpoint:
+    Description: Master Endpoint for Neptune Cluster
+    Value:
+      Fn::GetAtt:
+      - NeptuneStack
+      - Outputs.DBClusterEndpoint
+  NeptuneLoadFromS3IAMRoleArn:
+    Description: IAM Role for loading data in Neptune
+    Value:
+      Fn::GetAtt:
+      - NeptuneStack
+      - Outputs.NeptuneLoadFromS3IAMRoleArn
+  NeptuneAPIURL:
+    Description:  url of the serverless API that queries Neptune
+    Value:
+      Fn::GetAtt:
+      - NeptuneAPIStack
+      - Outputs.ApiURL
+  AWSRegion:
+    Description:  aws region
+    Value:
+      Fn::Sub: ${AWS::Region}
+
+
+
