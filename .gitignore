@@ -1,0 +1,14 @@
+__pycache__/
+.idea/
+*.iml
+*.pyc
+*.pyo
+*packaged.yaml
+.aws-sam/
+.DS_Store
+.python-version
+env.sh
+node_modules/
+.gitkeep
+.editorconfig
+nohup.out
