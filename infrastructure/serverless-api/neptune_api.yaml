@@ -1,0 +1,212 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  NeptuneEndpoint:
+    Description: Endpoint for Neptune
+    Type: String
+  SecurityGroup:
+    Description: Security Group used by lambda to access neptune
+    Type: AWS::EC2::SecurityGroup::Id
+  Subnet1:
+    Description: subnets used by lambda to access neptune
+    Type: AWS::EC2::Subnet::Id
+  Subnet2:
+    Description: subnets used by lambda to access neptune
+    Type: AWS::EC2::Subnet::Id
+  QueryOutputBucket:
+    Description: the S3 bucket that query results will be stored at
+    Type: String
+  WebappUsername:
+    Description: the username for logging into the webapp
+    Type: String
+  WebappPassword:
+    Description: the password for logging into the webapp
+    Type: String
+    NoEcho: true
+    MinLength: 8
+
+
+Globals:
+  Function:
+    Runtime: python3.7
+    Environment:
+      Variables:
+        NEPTUNE_CLUSTER_ENDPOINT: !Ref NeptuneEndpoint
+        NEPTUNE_CLUSTER_PORT: 8182
+        S3_BUCKET: !Ref QueryOutputBucket
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+    EndpointConfiguration: EDGE
+
+Resources:
+  NeptuneQueryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/neptune
+      Handler: index.lambda_handler
+      Timeout: 900
+      MemorySize: 1008
+      # make into params
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !Ref Subnet1
+          - !Ref Subnet2
+      Policies:
+        - AmazonS3FullAccess
+        - AWSLambdaVPCAccessExecutionRole
+        - AWSLambdaBasicExecutionRole
+      Events:
+        GetDocs:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NeptuneApi
+            Path: /docs
+            Method: get
+        GetTopics:
+          Type: Api
+          Properties:
+            RestApiId: !Ref NeptuneApi
+            Path: /topics
+            Method: get
+
+  NeptuneApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyCognitoAuthorizer
+        Authorizers:
+          MyCognitoAuthorizer:
+            UserPoolArn:  !GetAtt CognitoUserPool.Arn
+        AddDefaultAuthorizerToCorsPreflight: False
+
+  ########################################
+  # Cognito User pool                    #
+  ########################################
+  CognitoUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailMessage: 'Welcome to the topic modeling graph visualizer. Username: {username} Pwd: {####}'
+          EmailSubject: Welcome to the topic modeling graph visualizer.
+          SMSMessage: 'Welcome to the topic modeling graph visualizer. Username: {username} Pwd: {####}'
+        UnusedAccountValidityDays: 14
+      AliasAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      EmailVerificationMessage: 'Welcome to the topic modeling graph visualizer. Here is your confirmation code: {####}'
+      EmailVerificationSubject: Topic modeling graph visualizer login Email Confirmation Code
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+      UserPoolName: !Sub '${AWS::StackName}-users'
+
+  CognitoApplicationClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      ClientName: !Sub '${AWS::StackName}-appclient'
+      GenerateSecret: false
+      RefreshTokenValidity: 2
+      UserPoolId: !Ref CognitoUserPool
+
+
+  ########################################
+  # Cognito identity pool                #
+  ########################################
+  CognitoAuthRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: sts:AssumeRoleWithWebIdentity
+      Policies:
+        - PolicyName: graphv1dc7716e-sns-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:*"
+                Resource: "*"
+  CognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref CognitoApplicationClient
+          ProviderName: !Sub cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}
+          ServerSideTokenCheck: false
+  CognitoIdentityPoolRole:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref CognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthRole.Arn
+
+
+  ##################################################################
+  # Custom resource to create cognito user in cognito user pool    #
+  ##################################################################
+
+  SetupCognitoCustomResourceLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: cognitio_create_user.configure_cognito_lambda_handler
+      Description: 'Configure an ES domain to use Cognito for user authentication (including creating a domain for Cognito)'
+      MemorySize: 128
+      Timeout: 240
+      CodeUri: ./lambda/cognito/
+      Policies:
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'cognito-idp:AdminCreateUser'
+            Resource:
+              - '*'
+
+  CognitoUser:
+    Type: Custom::ESName
+    DependsOn:
+      - SetupCognitoCustomResourceLambda
+      - CognitoUserPool
+    Properties:
+      ServiceToken: !GetAtt SetupCognitoCustomResourceLambda.Arn
+      StackName: !Ref AWS::StackName
+      UserPoolId: !Ref CognitoUserPool
+      WebappUsername: !Ref WebappUsername
+      WebappPassword: !Ref WebappPassword
+
+Outputs:
+  CognitoUserPool:
+    Description: Cognito User Pool
+    Value: !Sub ${CognitoUserPool}
+  CognitoIdentityPool:
+    Description: A hyperlink to the Cognito User Pool console to manage users
+    Value: !Sub ${CognitoIdentityPool}
+  CognitoWebClientId:
+    Description: Cognito web client ID
+    Value: !Sub ${CognitoApplicationClient}
+  CognitoUserPoolManagementUrl:
+    Description: A hyperlink to the Cognito User Pool console to manage users
+    Value: !Sub https://console.aws.amazon.com/cognito/users/?region=${AWS::Region}#/pool/${CognitoUserPool}
+  ApiURL:
+    Description: "API endpoint URL"
+    Value: !Sub "https://${NeptuneApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+

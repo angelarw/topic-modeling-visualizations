@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create Amazon Neptune cluster and Amazon SageMaker notebook
+Parameters:
+  NestedStackS3Location:
+    Description: 'S3 locations of nested stacks.'
+    Type: String
+  S3Bucket:
+    Description: 'S3 bucket.'
+    Type: String
+  DbInstanceType:
+    Description: Neptune DB instance type
+    Type: String
+    Default: db.r4.large
+    AllowedValues:
+    - db.r4.large
+    - db.r4.xlarge
+    - db.r4.2xlarge
+    - db.r4.4xlarge
+    - db.r4.8xlarge
+    - db.r5.large
+    - db.r5.xlarge
+    - db.r5.2xlarge
+    - db.r5.4xlarge
+    - db.r5.12xlarge
+    ConstraintDescription: Must be a valid Neptune instance type.
+  WebappUsername:
+    Description: the username for logging into the webapp
+    Type: String
+  WebappPassword:
+    Description: the password for logging into the webapp
+    Type: String
+    NoEcho: true
+    MinLength: 8
+
+Conditions:
+  AZ3NotPresent:
+    Fn::Equals:
+      - Ref: AWS::Region
+      - ap-northeast-2
+  AZ3Present:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: AWS::Region
+          - ap-northeast-2
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/vpc.yaml
+      TimeoutInMinutes: '60'
+  SageMakerNeptuneStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/sagemaker.yaml
+      Parameters:
+        NeptuneClusterVpc:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.VPC
+        NeptuneClusterSubnetId:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.PublicSubnet1
+        NeptuneClientSecurityGroup:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.NeptuneClientSG
+      TimeoutInMinutes: '60'
+  NeptuneStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/neptune_base.yaml
+      Parameters:
+        NeptuneQueryTimeout: '300000'
+        DbInstanceType:
+          Ref: DbInstanceType
+        NeptuneClientSG:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.NeptuneClientSG
+        VPC:
+          Fn::GetAtt:
+          - VPCStack
+          - Outputs.VPC
+        Subnet1:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet1
+        Subnet2:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet2
+        Subnet3:
+          Fn::If:
+          - AZ3Present
+          - Fn::GetAtt:
+              - VPCStack
+              - Outputs.PublicSubnet3
+          - ''
+      TimeoutInMinutes: '60'
+  AddIamRoleToNeptuneStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/add_iam_role.json
+      Parameters:
+        DBClusterId:
+          Fn::GetAtt:
+          - NeptuneStack
+          - Outputs.DBClusterId
+        NeptuneLoadFromS3IAMRoleArn:
+          Fn::GetAtt:
+          - NeptuneStack
+          - Outputs.NeptuneLoadFromS3IAMRoleArn
+      TimeoutInMinutes: '60'
+
+  NeptuneAPIStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://s3.amazonaws.com/${NestedStackS3Location}/neptune_api.packaged.yaml
+      Parameters:
+        NeptuneEndpoint:
+          Fn::GetAtt:
+          - NeptuneStack
+          - Outputs.DBClusterEndpoint
+        SecurityGroup:
+          Fn::GetAtt:
+              - VPCStack
+              - Outputs.NeptuneClientSG
+        Subnet1:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet1
+        Subnet2:
+          Fn::GetAtt:
+            - VPCStack
+            - Outputs.PublicSubnet2
+        QueryOutputBucket: !Ref S3Bucket
+        WebappUsername: !Ref WebappUsername
+        WebappPassword: !Ref WebappPassword
+      TimeoutInMinutes: '60'

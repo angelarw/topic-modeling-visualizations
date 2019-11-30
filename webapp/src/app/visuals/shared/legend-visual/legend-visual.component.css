@@ -1,0 +1,19 @@
+.legend {
+  font-size: 1em;
+  text-align: left;
+}
+.legend-label-background {
+  stroke: white;
+  stroke-width: 0.6em;
+  display: block;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.legend-label {
+  display: block;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+

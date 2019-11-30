@@ -1,0 +1,21 @@
+.node {
+  cursor: pointer;
+  /*transition: stroke-width 0.1s ease-out,*/
+  /*fill 0.1s ease-out,*/
+  /*stroke 0.1s ease-out;*/
+
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.selected {
+  fill: gold;
+  r: 7;
+}
+
+.label {
+  cursor: pointer;
+  text-anchor: middle;
+  alignment-baseline: central;
+  font-weight: 600;
+}

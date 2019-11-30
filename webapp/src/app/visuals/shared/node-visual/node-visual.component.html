@@ -1,0 +1,38 @@
+<svg:g [attr.transform]="'translate(' + node.x + ',' + node.y + ')'" xmlns:svg=""
+       (mouseover)="onMouseover(node)"
+       (mousemove)="onMousemove($event)"
+       (mouseout)="onMouseout(node)"
+       (mousedown)="onMousedown(node)">
+  <svg:circle
+    *ngIf="nodeDisplayType === 'circle'"
+    class="node"
+    [class.selected]="node.selected"
+    [attr.fill]="node.color"
+    cx="0"
+    cy="0"
+
+    [attr.r]="node.r">
+  </svg:circle>
+  <svg:rect
+    *ngIf="nodeDisplayType === 'text'"
+    [attr.x]="calculateX()"
+    y="-8"
+    class="node-border"
+    [attr.width]="calculateWidth()"
+    height="16"
+    stroke="black"
+    fill="white"
+    stroke-width="1"
+  ></svg:rect>
+
+  <svg:text
+    *ngIf="nodeDisplayType === 'text'"
+    class="label"
+    [attr.font-size]="node.fontSize"
+    [class.selected]="node.selected"
+    [attr.fill]="node.color">
+    {{node.name}}
+  </svg:text>
+
+
+</svg:g>

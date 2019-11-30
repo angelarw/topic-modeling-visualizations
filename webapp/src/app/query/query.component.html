@@ -1,0 +1,11 @@
+<div class="query-container">
+  <mat-form-field class="query-input">
+    <input type="search" matInput placeholder="Query" [(ngModel)]="query.text">
+  </mat-form-field>
+
+  <mat-form-field class="limit-input">
+    <input type="number" matInput placeholder="Limit" [(ngModel)]="query.limit">
+  </mat-form-field>
+
+  <button class="search-button" mat-raised-button color="primary" (click)="onUpdate(query)">Search</button>
+</div>
