@@ -170,6 +170,23 @@ Outputs:
     Description:  aws region
     Value:
       Fn::Sub: ${AWS::Region}
-
+  CognitoUserPool:
+    Description: Cognito User Pool
+    Value:
+      Fn::GetAtt:
+      - NeptuneAPIStack
+      - Outputs.CognitoUserPool
+  CognitoIdentityPool:
+    Description: Cognito identity Pool ID
+    Value:
+      Fn::GetAtt:
+      - NeptuneAPIStack
+      - Outputs.CognitoIdentityPool
+  CognitoWebClientId:
+    Description: Cognito web client ID
+    Value:
+      Fn::GetAtt:
+      - NeptuneAPIStack
+      - Outputs.CognitoWebClientId
 
 

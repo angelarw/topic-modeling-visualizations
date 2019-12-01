@@ -1,8 +1,6 @@
 import {Component, Inject} from "@angular/core";
 import {MAT_DIALOG_DATA} from "@angular/material";
 import {Storage} from "aws-amplify";
-import {Link, Node} from "../../d3/models";
-import CONFIG from "../../topic-graph/topic-graph.config";
 import {Papa} from 'ngx-papaparse';
 import {HttpClient} from "@angular/common/http";
 import awsconfig from '../../../amplify-config';
