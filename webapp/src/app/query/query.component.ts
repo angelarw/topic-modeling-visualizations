@@ -8,7 +8,7 @@ import {EntityQuery} from "./entityQuery";
 })
 export class QueryComponent implements OnInit {
   @Output() queryUpdateEvent = new EventEmitter<EntityQuery>();
-  query: EntityQuery = new EntityQuery('005', 10);
+  query: EntityQuery = new EntityQuery('000', 20);
 
   constructor() {
   }
