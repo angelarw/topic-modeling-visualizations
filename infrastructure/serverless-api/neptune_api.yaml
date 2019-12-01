@@ -198,7 +198,7 @@ Outputs:
     Description: Cognito User Pool
     Value: !Sub ${CognitoUserPool}
   CognitoIdentityPool:
-    Description: A hyperlink to the Cognito User Pool console to manage users
+    Description: Cognito identity Pool ID
     Value: !Sub ${CognitoIdentityPool}
   CognitoWebClientId:
     Description: Cognito web client ID
