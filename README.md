@@ -1,5 +1,9 @@
 # Understanding a large amount of text by modeling & visualizing topics
 
+## Architecture
+
+![](./images/architecture.png)
+
 
 ## Setup
 
@@ -32,6 +36,14 @@
 1. Navigate into `topic-modeling-visualizations/` and open `Topic Modeling Tutorial.ipynb`
 
 1. Follow steps detailed in the notebook 
+
+
+
+## Clean up
+
+1. If you created a cloud9 environment, delete it
+1. Delete the `large-text-understanding` CloudFormation stack
+1. Delete the s3 bucket you created 
 
 
 
