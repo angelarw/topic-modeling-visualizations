@@ -84,7 +84,7 @@ Resources:
               - "set -e\n"
               - "cd /home/ec2-user/SageMaker/\n"
               - "git clone https://github.com/angelarw/topic-modeling-visualizations.git\n"
-              - "chmod a+rwx /home/ec2-user/SageMaker/topic-modeling-visualizations\n"
+              - "chmod -R a+rwx /home/ec2-user/SageMaker/topic-modeling-visualizations\n"
       OnStart:
       - Content:
           Fn::Base64:
