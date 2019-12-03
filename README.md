@@ -37,6 +37,15 @@
 
 1. Follow steps detailed in the notebook 
 
+## Use the webapp to explore topics and documents
+
+follow the instructions in the notebook to launch the webapp
+
+### Topic view
+![](images/topic-example.png)
+
+### Document view
+![](images/doc-example-graph.png)
 
 
 ## Clean up
