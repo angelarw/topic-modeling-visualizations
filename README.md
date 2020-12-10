@@ -8,7 +8,7 @@
 ## Setup
 
 
-1. In the S3 console, create a bucket in the US West (Oregon) region (region code `us-west-2`). Use a unique name, e.g. `large-text-understanding-{username}`
+1. In the S3 console, create a bucket in the US East (Virginia) region (region code `us-east-1`). Use a unique name, e.g. `large-text-understanding-{username}`
 1. Enable CORS on the bucket using the below policy
 
     ```xml
