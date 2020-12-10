@@ -28,7 +28,7 @@
     ```
 1. Launch cloudformation stack: 
 
-	[![Launch cloudformation in us-east-1](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=large-text-understanding-workshop&templateURL=https://s3.amazonaws.com/large-text-understanding/cloudformation/topic-modeling-master.yaml)
+	[![Launch cloudformation in us-east-1](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/images/cloudformation-launch-stack-button.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=large-text-understanding-workshop&templateURL=https://s3.amazonaws.com/large-text-understanding-workshop/cloudformation/topic-modeling-master.yaml)
 
 ## Follow tutorial in Jupyter notebook  
 1. Go to [SageMaker console](https://us-east-1.console.aws.amazon.com/sagemaker/home?region=us-east-1#/notebook-instances) and open Jupyter notebook instance once it's ready
