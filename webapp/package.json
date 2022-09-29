@@ -36,7 +36,7 @@
     "@aws-amplify/ui": "^1.0.22",
     "aws-amplify": "^1.1.32",
     "aws-amplify-angular": "^3.0.7",
-    "d3": "^5.9.7",
+    "d3": "^7.6.1",
     "ngx-papaparse": "^3.0.3",
     "rxjs": "~6.4.0",
     "tslib": "^1.9.0",
