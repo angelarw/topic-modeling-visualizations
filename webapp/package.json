@@ -43,11 +43,11 @@
     "zone.js": "~0.9.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~0.801.2",
+    "@angular-devkit/build-angular": "~15.0.4",
     "@angular/cli": "^8.3.4",
     "@angular/compiler-cli": "~8.1.2",
     "@angular/language-service": "~8.1.2",
-    "@aws-amplify/cli": "^1.8.5",
+    "@aws-amplify/cli": "^10.5.2",
     "@types/d3": "^5.7.2",
     "@types/jasmine": "~3.3.8",
     "@types/jasminewd2": "~2.0.3",
